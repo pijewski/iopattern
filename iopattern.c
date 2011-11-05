@@ -155,10 +155,11 @@ main(int argc, char *argv[])
 
 	if (isread)
 		rv = doread(dev, nblocks, blocksize);
-	else 
+	else
 		rv = dowrite(dev, nblocks, blocksize);
 
-	printf("\nProcessed %d blocks (%d bytes).\n", nblocks, nblocks * blocksize);
+	printf("\nProcessed %d blocks (%d bytes).\n",
+	    nblocks, nblocks * blocksize);
 
 out:
 	(void) close(dev);

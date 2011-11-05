@@ -3,3 +3,6 @@ all:
 
 clean:
 	rm -f iopattern
+
+check:
+	cstyle iopattern.c
