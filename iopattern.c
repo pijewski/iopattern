@@ -99,17 +99,17 @@ int
 main(int argc, char *argv[])
 {
 	char *device, c;
-	long nblocks = 100;
-	long blocksize = 512;
-	long offset = 1000;
+	uint64_t nblocks = 8192i;
+	uint64_t blocksize = 131072;
+	uint64_t offset = 0;
 	boolean_t isread = B_FALSE;
-	int dev, ii, jj, rv;
+	int dev, rv;
 
 	extern int optind, optopt;
 	extern char *optarg;
 
 	errno = 0;
-	device = "/dev/zvol/dsk/tank/dump";
+	device = "/dev/zvol/dsk/zones/dump";
 
 	while ((c = getopt(argc, argv, "d:n:o:rs:")) != EOF) {
 		switch (c) {
@@ -139,7 +139,7 @@ main(int argc, char *argv[])
 	printf("Device: %s\nBlock Size: %d\nBlock Count: %d\n"
 	    "Device Offset: %d\n\n", device, blocksize, nblocks, offset);
 
-	if ((dev = open(device, O_RDWR)) < 0) {
+	if ((dev = open(device, O_RDWR | O_LARGEFILE)) < 0) {
 		fprintf(stderr, "Failed to open device '%s': %s\n",
 		    device, strerror(errno));
 		rv = -1;
@@ -158,8 +158,13 @@ main(int argc, char *argv[])
 	else
 		rv = dowrite(dev, nblocks, blocksize);
 
-	printf("\nProcessed %d blocks (%d bytes).\n",
-	    nblocks, nblocks * blocksize);
+	printf("%d %d", nblocks, blocksize);
+
+	uint64_t nbytes = nblocks * blocksize;
+	uint64_t nbytes_in_MiB = nbytes / 1024 / 1024;
+
+	printf("\nProcessed %d blocks (%d MiB).\n",
+	    nblocks, nbytes_in_MiB);
 
 out:
 	(void) close(dev);
