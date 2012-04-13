@@ -139,7 +139,7 @@ main(int argc, char *argv[])
 	printf("Device: %s\nBlock Size: %d\nBlock Count: %d\n"
 	    "Device Offset: %d\n\n", device, blocksize, nblocks, offset);
 
-	if ((dev = open(device, O_RDWR | O_LARGEFILE)) < 0) {
+	if ((dev = open(device, O_CREAT | O_RDWR | O_LARGEFILE)) < 0) {
 		fprintf(stderr, "Failed to open device '%s': %s\n",
 		    device, strerror(errno));
 		rv = -1;
