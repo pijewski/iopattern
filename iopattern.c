@@ -35,7 +35,7 @@ fullread(int fd, void *buf, size_t nbyte)
 	return (total);
 }
 
-#define BLOCKSIZE	(128 * 1024)
+#define BLOCKSIZE	(2 * 1024)
 
 static int
 dowrite(int fd, long nblocks, long blocksize)
