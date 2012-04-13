@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 static ssize_t
@@ -134,6 +135,20 @@ main(int argc, char *argv[])
 			rv = -1;
 			goto out;
 		}
+	}
+
+	if (blocksize & (blocksize - 1) == 0) {
+		fprintf(stderr, "block size %d is not a power of two\n",
+		    blocksize);
+		rv = -1;
+		goto out;
+	}
+
+	if (blocksize > 128 * 1024) {
+		fprintf(stderr, "block size %d exceeds maximum (128k)\n",
+		    blocksize);
+		rv = -1;
+		goto out;
 	}
 
 	printf("Device: %s\nBlock Size: %d\nBlock Count: %d\n"
