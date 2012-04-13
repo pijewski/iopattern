@@ -35,32 +35,42 @@ fullread(int fd, void *buf, size_t nbyte)
 	return (total);
 }
 
+#define BLOCKSIZE	(128 * 1024)
+
 static int
 dowrite(int fd, long nblocks, long blocksize)
 {
-	int ii, jj;
-	char *buf;
+	int ii, jj, kk;
+	uint8_t value = 0;
+	uint8_t *pattern;
+	int patterns_per_block = (BLOCKSIZE / blocksize);
 
-	if ((buf = malloc(blocksize)) == NULL) {
-		perror("malloc");
+	if ((pattern = malloc(BLOCKSIZE)) == NULL)
 		return (-1);
-	}
 
-	for (ii = 0; ii < nblocks; ii++) {
-		for (jj = 0; jj < blocksize; jj += 2) {
-			buf[jj] = ii;
-			buf[jj + 1] = ii >> 8;
+	/*
+	 * Write a 8-bit pattern into the buffer, cycling through 0x00, 0x01,
+	 * 0x02, ..., 0xff.
+	 */
+	for (ii = 0; ii < nblocks / patterns_per_block; ii++) {
+		/*
+		 * The pattern block size may be less than 128k, and if so,
+		 * write multiple pattern blocks so we don't have to make a
+		 * write(2) call for every pattern block.
+		 */
+		for (jj = 0; jj < patterns_per_block; jj++) {
+			(void) memset(pattern + (jj * blocksize), value++, blocksize);
 		}
 
-		if (fullwrite(fd, buf, blocksize) < blocksize) {
+		if (fullwrite(fd, pattern, BLOCKSIZE) < BLOCKSIZE) {
 			fprintf(stderr, "Failed to write %d bytes: %s\n",
-			    blocksize, strerror(errno));
-			free(buf);
+			    sizeof (pattern), strerror(errno));
+			free(pattern);
 			return (-1);
 		}
 	}
 
-	free(buf);
+	free(pattern);
 	return (0);
 }
 
@@ -100,8 +110,8 @@ int
 main(int argc, char *argv[])
 {
 	char *device, c;
-	uint64_t nblocks = 8192i;
-	uint64_t blocksize = 131072;
+	uint64_t nblocks = 8192;
+	uint64_t blocksize = 8192;
 	uint64_t offset = 0;
 	boolean_t isread = B_FALSE;
 	int dev, rv;
@@ -173,10 +183,8 @@ main(int argc, char *argv[])
 	else
 		rv = dowrite(dev, nblocks, blocksize);
 
-	printf("%d %d", nblocks, blocksize);
-
 	uint64_t nbytes = nblocks * blocksize;
-	uint64_t nbytes_in_MiB = nbytes / 1024 / 1024;
+	uint64_t nbytes_in_MiB = (nbytes / 1024) / 1024;
 
 	printf("\nProcessed %d blocks (%d MiB).\n",
 	    nblocks, nbytes_in_MiB);
